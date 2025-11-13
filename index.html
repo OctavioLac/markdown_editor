@@ -14,16 +14,182 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #f5f5f5;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: #2c3e50;
+            color: white;
+            overflow-y: auto;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+
+        .sidebar-header {
             padding: 20px;
+            background: #1a252f;
+            border-bottom: 1px solid #34495e;
+        }
+
+        .sidebar-header h2 {
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .sidebar-header p {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        .nav-menu {
+            padding: 10px 0;
+        }
+
+        .nav-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            font-size: 13px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .nav-item:hover {
+            background: rgba(52, 152, 219, 0.1);
+            border-left-color: #3498db;
+        }
+
+        .nav-item.active {
+            background: rgba(52, 152, 219, 0.2);
+            border-left-color: #3498db;
+        }
+
+        /* Estilos para navegação hierárquica colapsável */
+        .nav-module {
+            margin-bottom: 8px;
+        }
+
+        .nav-module-header {
+            padding: 12px 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-left: 3px solid transparent;
+            font-weight: 700;
+            color: #3498db;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-module-header:hover {
+            background: rgba(52, 152, 219, 0.15);
+            border-left-color: #3498db;
+        }
+
+        .nav-module-content {
+            max-height: 3000px;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            padding-left: 5px;
+        }
+
+        .nav-module-content.collapsed {
+            max-height: 0;
+        }
+
+        .nav-atividades {
+            margin: 8px 0 8px 10px;
+        }
+
+        .nav-atividades-header {
+            padding: 10px 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-left: 3px solid transparent;
+            font-weight: 600;
+            color: #e67e22;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .nav-atividades-header:hover {
+            background: rgba(230, 126, 34, 0.15);
+            border-left-color: #e67e22;
+        }
+
+        .nav-atividades-content {
+            max-height: 2000px;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            padding-left: 5px;
+        }
+
+        .nav-atividades-content.collapsed {
+            max-height: 0;
+        }
+
+        .collapse-icon {
+            display: inline-block;
+            min-width: 12px;
+            font-size: 10px;
+            transition: transform 0.2s;
+            color: currentColor;
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        
+        .collapse-icon:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .nav-text {
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .nav-module-content .nav-item,
+        .nav-atividades-content .nav-item {
+            font-size: 13px;
+            padding: 10px 12px;
+            margin-left: 8px;
+        }
+
+        .nav-section {
+            padding: 15px 20px 8px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.5;
+            font-weight: 600;
+        }
+
+        .main-content {
+            margin-left: 250px;
+            width: calc(100% - 250px);
+            height: 100vh;
+            overflow-y: auto;
         }
 
         .container {
-            max-width: 900px;
-            margin: 0 auto;
+            max-width: 100%;
+            margin: 0;
             background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            overflow: hidden;
+            min-height: 100%;
         }
 
         .header {
@@ -155,6 +321,7 @@
             resize: vertical;
             min-height: 60px;
             transition: border-color 0.3s ease;
+            overflow-y: auto;
         }
 
         .field-input:focus {
@@ -205,9 +372,41 @@
             font-style: italic;
         }
 
+        .sidebar-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 101;
+            background: #2c3e50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
         @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-toggle {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+            }
+
             body {
-                padding: 10px;
+                padding: 0;
             }
 
             .container {
@@ -253,7 +452,20 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <button class="sidebar-toggle" id="sidebarToggle">☰ Menu</button>
+    
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>📑 Navegação</h2>
+            <p>Campos do documento</p>
+        </div>
+        <div class="nav-menu" id="navMenu">
+            <!-- Será preenchido dinamicamente -->
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="container">
         <div class="header">
             <h1>📝 Editor de Markdown</h1>
             <p>Edite o conteúdo entre as tags de forma simples e intuitiva</p>
@@ -293,6 +505,7 @@
                 <p>Clique em "Abrir Arquivo" para começar a editar</p>
             </div>
         </div>
+    </div>
     </div>
 
     <div class="toast" id="toast"></div>

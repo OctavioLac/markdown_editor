@@ -533,11 +533,15 @@ function renderEditor() {
 
     editorArea.innerHTML = '';
     
+    // Contadores para numeração sequencial
+    const counters = {};
+    
     parsedContent.forEach((item, index) => {
         console.log('Rendering item', index, ':', item.tag);
         
         const fieldGroup = document.createElement('div');
         fieldGroup.className = 'field-group';
+        fieldGroup.id = `field-${index}`;
         
         // Aplicar estilos específicos por tipo
         if (item.type === 'frontmatter') {
@@ -556,23 +560,83 @@ function renderEditor() {
             label.classList.add('content-after-label');
         }
         
-        label.textContent = item.tag;
+        // Adicionar numeração sequencial baseada no tipo da tag
+        let displayTag = item.tag;
+        
+        // Não numerar campos "conteúdo acima" nem frontmatter
+        if (item.type === 'content-after' || item.type === 'frontmatter') {
+            label.textContent = displayTag;
+        } else {
+            // Extrair o tipo base da tag (sem sufixos como "- Módulo 1")
+            let tagType = item.tag;
+            
+            // Identificar o tipo base da tag
+            if (item.tag.toUpperCase().includes('MODULO')) {
+                tagType = 'MODULO';
+            } else if (item.tag.toUpperCase().includes('NUCLEO')) {
+                tagType = 'NUCLEO_CONCEITUAL';
+            } else if (item.tag.toUpperCase().includes('SUBSECAO') || item.tag.toUpperCase().includes('SUBSEÇÃO')) {
+                tagType = 'SUBSECAO';
+            } else if (item.tag.toUpperCase().includes('SECAO') || item.tag.toUpperCase().includes('SEÇÃO')) {
+                tagType = 'SECAO';
+            } else if (item.tag.toUpperCase().startsWith('IMAGEM')) {
+                tagType = 'IMAGEM';
+            } else if (item.tag.toUpperCase().includes('OBJETIVO')) {
+                tagType = 'OBJETIVO';
+            } else if (item.tag.toUpperCase().includes('SAIBA')) {
+                tagType = 'SAIBA_MAIS';
+            } else {
+                tagType = null;
+            }
+            
+            // Incrementar contador e adicionar número APÓS o nome
+            if (tagType) {
+                counters[tagType] = (counters[tagType] || 0) + 1;
+                
+                if (tagType === 'MODULO') {
+                    displayTag = `${item.tag} ${counters[tagType]}`;
+                } else if (tagType === 'NUCLEO_CONCEITUAL') {
+                    displayTag = `Núcleo Conceitual ${counters[tagType]}`;
+                } else if (tagType === 'SECAO') {
+                    // Remover "SECAO" ou "SEÇÃO" do nome original e adicionar numerado
+                    const cleanName = item.tag.replace(/SECAO|SEÇÃO/i, '').replace(/^[\s-]+/, '');
+                    displayTag = cleanName ? `Seção ${counters[tagType]} - ${cleanName}` : `Seção ${counters[tagType]}`;
+                } else if (tagType === 'SUBSECAO') {
+                    const cleanName = item.tag.replace(/SUBSECAO|SUBSEÇÃO/i, '').replace(/^[\s-]+/, '');
+                    displayTag = cleanName ? `Subseção ${counters[tagType]} - ${cleanName}` : `Subseção ${counters[tagType]}`;
+                } else if (tagType === 'OBJETIVO') {
+                    displayTag = `Objetivo ${counters[tagType]}`;
+                } else if (tagType === 'IMAGEM') {
+                    displayTag = `${item.tag} ${counters[tagType]}`;
+                } else if (tagType === 'SAIBA_MAIS') {
+                    displayTag = `Saiba Mais ${counters[tagType]}`;
+                }
+            }
+            
+            label.textContent = displayTag;
+        }
         
         const textarea = document.createElement('textarea');
         textarea.className = 'field-input';
         textarea.value = item.content;
         textarea.dataset.index = index;
         
-        // Ajusta a altura do textarea baseado no conteúdo
-        const lines = item.content.split('\n').length;
-        textarea.style.minHeight = `${Math.max(60, lines * 24 + 24)}px`;
+        // Ajusta a altura do textarea baseado no conteúdo automaticamente
+        const adjustHeight = () => {
+            const lines = textarea.value.split('\n').length;
+            const lineHeight = 24;
+            const padding = 24;
+            const calculatedHeight = Math.max(60, lines * lineHeight + padding);
+            textarea.style.height = calculatedHeight + 'px';
+        };
+        
+        // Ajustar altura inicial
+        adjustHeight();
         
         // Atualiza o conteúdo quando o usuário editar
         textarea.addEventListener('input', function() {
             parsedContent[index].content = this.value;
-            // Auto-resize
-            this.style.height = 'auto';
-            this.style.height = this.scrollHeight + 'px';
+            adjustHeight();
         });
         
         fieldGroup.appendChild(label);
@@ -580,7 +644,215 @@ function renderEditor() {
         editorArea.appendChild(fieldGroup);
     });
     
+    // Renderizar menu de navegação
+    renderNavMenu();
+    
     console.log('Rendering complete');
+}
+
+/**
+ * Renderiza o menu de navegação lateral
+ */
+function renderNavMenu() {
+    const navMenu = document.getElementById('navMenu');
+    if (!navMenu) return;
+    
+    navMenu.innerHTML = '';
+    
+    const counters = {};
+    let currentModule = null;
+    let currentAtividades = null;
+    
+    parsedContent.forEach((item, index) => {
+        // Pular campos "conteúdo acima" e frontmatter
+        if (item.type === 'content-after' || item.type === 'frontmatter') {
+            return;
+        }
+        
+        // Aplicar a mesma lógica de numeração do renderEditor
+        let displayTag = item.tag;
+        let tagType = item.tag;
+        
+        // Identificar o tipo base da tag
+        if (item.tag.toUpperCase().includes('MODULO')) {
+            tagType = 'MODULO';
+        } else if (item.tag.toUpperCase().includes('NUCLEO')) {
+            tagType = 'NUCLEO_CONCEITUAL';
+        } else if (item.tag.toUpperCase().includes('SUBSECAO') || item.tag.toUpperCase().includes('SUBSEÇÃO')) {
+            tagType = 'SUBSECAO';
+        } else if (item.tag.toUpperCase().includes('SECAO') || item.tag.toUpperCase().includes('SEÇÃO')) {
+            tagType = 'SECAO';
+        } else if (item.tag.toUpperCase().startsWith('IMAGEM')) {
+            tagType = 'IMAGEM';
+        } else if (item.tag.toUpperCase().includes('OBJETIVO')) {
+            tagType = 'OBJETIVO';
+        } else if (item.tag.toUpperCase().includes('SAIBA')) {
+            tagType = 'SAIBA_MAIS';
+        } else {
+            tagType = null;
+        }
+        
+        // Incrementar contador e adicionar número APÓS o nome
+        if (tagType) {
+            counters[tagType] = (counters[tagType] || 0) + 1;
+            
+            if (tagType === 'MODULO') {
+                displayTag = `${item.tag} ${counters[tagType]}`;
+            } else if (tagType === 'NUCLEO_CONCEITUAL') {
+                displayTag = `Núcleo Conceitual ${counters[tagType]}`;
+            } else if (tagType === 'SECAO') {
+                const cleanName = item.tag.replace(/SECAO|SEÇÃO/i, '').replace(/^[\s-]+/, '');
+                displayTag = cleanName ? `Seção ${counters[tagType]} - ${cleanName}` : `Seção ${counters[tagType]}`;
+            } else if (tagType === 'SUBSECAO') {
+                const cleanName = item.tag.replace(/SUBSECAO|SUBSEÇÃO/i, '').replace(/^[\s-]+/, '');
+                displayTag = cleanName ? `Subseção ${counters[tagType]} - ${cleanName}` : `Subseção ${counters[tagType]}`;
+            } else if (tagType === 'OBJETIVO') {
+                displayTag = `Objetivo ${counters[tagType]}`;
+            } else if (tagType === 'IMAGEM') {
+                displayTag = `${item.tag} ${counters[tagType]}`;
+            } else if (tagType === 'SAIBA_MAIS') {
+                displayTag = `Saiba Mais ${counters[tagType]}`;
+            }
+        }
+        
+        const tagUpper = item.tag.toUpperCase();
+        
+        // Se é MODULO, criar novo grupo colapsável
+        if (tagUpper.includes('MODULO') && !tagUpper.includes('ATIVIDADE')) {
+            currentModule = document.createElement('div');
+            currentModule.className = 'nav-module';
+            
+            const moduleHeader = document.createElement('div');
+            moduleHeader.className = 'nav-module-header';
+            
+            const icon = document.createElement('span');
+            icon.className = 'collapse-icon';
+            icon.textContent = '▼';
+            
+            const text = document.createElement('span');
+            text.className = 'nav-text';
+            text.textContent = displayTag;
+            
+            moduleHeader.appendChild(icon);
+            moduleHeader.appendChild(text);
+            
+            const moduleContent = document.createElement('div');
+            moduleContent.className = 'nav-module-content';
+            
+            // Clique na seta: apenas colapsa/expande
+            icon.addEventListener('click', (e) => {
+                e.stopPropagation();
+                moduleContent.classList.toggle('collapsed');
+                icon.textContent = moduleContent.classList.contains('collapsed') ? '▶' : '▼';
+            });
+            
+            // Clique no texto: navega para o campo
+            text.addEventListener('click', (e) => {
+                e.stopPropagation();
+                scrollToField(index);
+            });
+            
+            currentModule.appendChild(moduleHeader);
+            currentModule.appendChild(moduleContent);
+            navMenu.appendChild(currentModule);
+            currentAtividades = null;
+            
+        } else if (tagUpper.includes('ATIVIDADE') && tagUpper.includes('MODULO')) {
+            // Criar grupo de atividades
+            const atividadesGroup = document.createElement('div');
+            atividadesGroup.className = 'nav-atividades';
+            
+            const atividadesHeader = document.createElement('div');
+            atividadesHeader.className = 'nav-atividades-header';
+            
+            const iconAtiv = document.createElement('span');
+            iconAtiv.className = 'collapse-icon';
+            iconAtiv.textContent = '▶';
+            
+            const textAtiv = document.createElement('span');
+            textAtiv.className = 'nav-text';
+            textAtiv.textContent = displayTag;
+            
+            atividadesHeader.appendChild(iconAtiv);
+            atividadesHeader.appendChild(textAtiv);
+            
+            const atividadesContent = document.createElement('div');
+            atividadesContent.className = 'nav-atividades-content collapsed';
+            
+            // Clique na seta: apenas colapsa/expande
+            iconAtiv.addEventListener('click', (e) => {
+                e.stopPropagation();
+                atividadesContent.classList.toggle('collapsed');
+                iconAtiv.textContent = atividadesContent.classList.contains('collapsed') ? '▶' : '▼';
+            });
+            
+            // Clique no texto: navega para o campo
+            textAtiv.addEventListener('click', (e) => {
+                e.stopPropagation();
+                scrollToField(index);
+            });
+            
+            atividadesGroup.appendChild(atividadesHeader);
+            atividadesGroup.appendChild(atividadesContent);
+            
+            if (currentModule && currentModule.querySelector('.nav-module-content')) {
+                currentModule.querySelector('.nav-module-content').appendChild(atividadesGroup);
+            } else {
+                navMenu.appendChild(atividadesGroup);
+            }
+            
+            currentAtividades = atividadesContent;
+            
+        } else {
+            // Item regular
+            const navItem = document.createElement('div');
+            navItem.className = 'nav-item';
+            navItem.textContent = displayTag;
+            navItem.dataset.index = index;
+            
+            navItem.addEventListener('click', () => {
+                scrollToField(index);
+                
+                // Remover active de todos
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                navItem.classList.add('active');
+                
+                // Fechar sidebar no mobile
+                if (window.innerWidth <= 768) {
+                    document.getElementById('sidebar').classList.remove('open');
+                }
+            });
+            
+            // Adicionar no contexto apropriado
+            if (currentAtividades && (tagUpper.includes('PERGUNTA') || tagUpper.includes('OPCOES') || 
+                                       tagUpper.includes('GABARITO') || tagUpper.includes('JUSTIFICATIVA'))) {
+                currentAtividades.appendChild(navItem);
+            } else if (currentModule && currentModule.querySelector('.nav-module-content')) {
+                currentModule.querySelector('.nav-module-content').appendChild(navItem);
+            } else {
+                navMenu.appendChild(navItem);
+            }
+        }
+    });
+}
+
+/**
+ * Rola até um campo específico
+ */
+function scrollToField(index) {
+    const field = document.getElementById(`field-${index}`);
+    if (field) {
+        field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // Destacar brevemente o campo
+        field.style.transition = 'none';
+        field.style.background = '#e3f2fd';
+        
+        setTimeout(() => {
+            field.style.transition = 'background 1s ease';
+            field.style.background = '';
+        }, 100);
+    }
 }
 
 /**
@@ -786,6 +1058,28 @@ function openDebugConsole() {
     
     showToast('Informações de debug no console (F12)', 'info');
     alert('Console de debug aberto!\n\nPressione F12 para ver os detalhes no console do navegador.\n\nCampos encontrados: ' + parsedContent.length);
+}
+
+/**
+ * Toggle do sidebar no mobile
+ */
+const sidebarToggle = document.getElementById('sidebarToggle');
+const sidebar = document.getElementById('sidebar');
+
+if (sidebarToggle && sidebar) {
+    sidebarToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('open');
+    });
+    
+    // Fechar sidebar ao clicar fora (mobile)
+    document.addEventListener('click', (e) => {
+        if (window.innerWidth <= 768 && 
+            sidebar.classList.contains('open') && 
+            !sidebar.contains(e.target) && 
+            !sidebarToggle.contains(e.target)) {
+            sidebar.classList.remove('open');
+        }
+    });
 }
 
 // Inicialização
